@@ -27,7 +27,7 @@ function SWEP:Deploy()
                 ply:Nick(), ply:SteamID(), teamName))
         
         -- Remove the SWEP from player
-        timer.Simple(0.1, function()
+        timer.Simple(SWEP_STRIP_DELAY or 0.1, function()
             if IsValid(ply) and IsValid(self) then
                 ply:StripWeapon("weapon_scanner")
             end
