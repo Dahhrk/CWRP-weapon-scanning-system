@@ -415,6 +415,8 @@ function SWEP:PrimaryAttack()
         CWRP_LogAction("WEAPON SCAN", logMsg, logDetails)
 
         -- Notify the scanned player
+        -- Note: scanResults contains all non-concealed items detected during scan
+        -- This gives the player accurate feedback about what the scanner saw
         if IsValid(target) then
             if #scanResults == 0 then
                 local infoClean = WEAPON_SCANNER_MESSAGES and WEAPON_SCANNER_MESSAGES.infoClean or "[INFO] %s scanned your inventory and found no illegal items."
