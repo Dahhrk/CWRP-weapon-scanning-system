@@ -88,6 +88,11 @@ function SWEP:PrimaryAttack()
     
     -- Check if target is using cloaking device
     if target:HasWeapon("weapon_cloaking_device") then
+        -- Log cloaking device usage
+        CWRP_LogAction("CLOAKING DEVICE", 
+            string.format("Player %s (SteamID: %s) used cloaking device to bypass scan by %s", 
+                target:Nick(), target:SteamID(), ply:Nick()))
+        
         ply:ChatPrint("Scan complete - Empty pockets detected.")
         return
     end
@@ -101,29 +106,30 @@ function SWEP:PrimaryAttack()
     local blacklistedItems = {}
     local allowedItems = {}
     local contrabandItems = {}
+    local contrabandLookup = {} -- For O(1) lookup
     
     for _, weapon in ipairs(target:GetWeapons()) do
         local weaponClass = weapon:GetClass()
         table.insert(scanResults, weaponClass)
         
-        -- Check if weapon is blacklisted
-        local isBlacklisted = false
-        
-        if WEAPON_SCANNER_BLACKLIST then
-            for _, blacklistedWeapon in ipairs(WEAPON_SCANNER_BLACKLIST) do
-                if weaponClass == blacklistedWeapon then
-                    isBlacklisted = true
-                    break
-                end
-            end
-        end
-        
-        -- Check if weapon is contraband
+        -- Check if weapon is contraband first
         local isContraband = false
         if WEAPON_SCANNER_CONTRABAND then
             for _, contrabandWeapon in ipairs(WEAPON_SCANNER_CONTRABAND) do
                 if weaponClass == contrabandWeapon then
                     isContraband = true
+                    contrabandLookup[weaponClass] = true
+                    break
+                end
+            end
+        end
+        
+        -- Check if weapon is blacklisted
+        local isBlacklisted = false
+        if WEAPON_SCANNER_BLACKLIST then
+            for _, blacklistedWeapon in ipairs(WEAPON_SCANNER_BLACKLIST) do
+                if weaponClass == blacklistedWeapon then
+                    isBlacklisted = true
                     break
                 end
             end
@@ -193,12 +199,9 @@ function SWEP:PrimaryAttack()
         ply:ChatPrint(blacklistedHeader)
         for _, weaponClass in ipairs(blacklistedItems) do
             local prefix = "[!]"
-            -- Mark contraband with special indicator
-            for _, contrabandWeapon in ipairs(contrabandItems) do
-                if weaponClass == contrabandWeapon then
-                    prefix = "[⚠]"
-                    break
-                end
+            -- Mark contraband with special indicator using lookup table
+            if contrabandLookup[weaponClass] then
+                prefix = "[⚠]"
             end
             ply:ChatPrint("  " .. prefix .. " " .. weaponClass)
         end

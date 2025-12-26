@@ -78,14 +78,3 @@ end
 function SWEP:Think()
     -- Passive cloaking while equipped
 end
-
--- Custom hook for integration with weapon scanner
-hook.Add("CWRP_PlayerScanned", "CloakingDevice_SpoofScan", function(scanner, target, scanData)
-    if IsValid(target) and target:HasWeapon("weapon_cloaking_device") then
-        -- The scan is already spoofed in weapon_scanner.lua
-        -- This hook can be used for additional logging if needed
-        CWRP_LogAction("CLOAKING DEVICE", 
-            string.format("Player %s (SteamID: %s) used cloaking device to bypass scan by %s", 
-                target:Nick(), target:SteamID(), scanner:Nick()))
-    end
-end)
