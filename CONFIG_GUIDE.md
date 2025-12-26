@@ -78,7 +78,7 @@ The configuration file is organized into 11 clear sections:
   - weapon_scanner
   - weapon_confiscator
   - weapon_drop
-  - weapon_cloaking_device (deprecated)
+  - weapon_bypass_scanning_swep (deprecated)
 - `SWEP_STRIP_DELAY`: Delay before removing unauthorized SWEP
 
 ## Common Customization Scenarios

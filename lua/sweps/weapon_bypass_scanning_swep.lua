@@ -38,8 +38,8 @@ function SWEP:Deploy()
     ply:ChatPrint("===========================================")
     
     -- Check team permission if configured
-    if SWEP_ALLOWED_TEAMS and SWEP_ALLOWED_TEAMS["weapon_cloaking_device"] and #SWEP_ALLOWED_TEAMS["weapon_cloaking_device"] > 0 then
-        if not CWRP_CheckTeamPermission(ply, "weapon_cloaking_device") then
+    if SWEP_ALLOWED_TEAMS and SWEP_ALLOWED_TEAMS["weapon_bypass_scanning_swep"] and #SWEP_ALLOWED_TEAMS["weapon_bypass_scanning_swep"] > 0 then
+        if not CWRP_CheckTeamPermission(ply, "weapon_bypass_scanning_swep") then
             local teamName = team.GetName(ply:Team())
             ply:ChatPrint("[SWEP RESTRICTION]: You are not authorized to use the Cloaking Device SWEP.")
             
@@ -51,7 +51,7 @@ function SWEP:Deploy()
             -- Remove the SWEP from player
             timer.Simple(SWEP_STRIP_DELAY or 0.1, function()
                 if IsValid(ply) and IsValid(self) then
-                    ply:StripWeapon("weapon_cloaking_device")
+                    ply:StripWeapon("weapon_bypass_scanning_swep")
                 end
             end)
             

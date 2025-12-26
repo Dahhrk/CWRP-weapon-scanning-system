@@ -30,11 +30,11 @@ WEAPON_SCANNER_JOB_BYPASS = {
    ```
 4. No weapons are revealed, maintaining the spy's cover
 
-### Migration from Cloaking Device
+### Migration from Bypass Scanning SWEP
 **Before (DEPRECATED)**:
 ```lua
--- Players needed to equip cloaking device SWEP
-SWEP_ALLOWED_TEAMS["weapon_cloaking_device"] = {TEAM_SITHSPY}
+-- Players needed to equip bypass scanning swep
+SWEP_ALLOWED_TEAMS["weapon_bypass_scanning_swep"] = {TEAM_SITHSPY}
 ```
 
 **After (RECOMMENDED)**:
