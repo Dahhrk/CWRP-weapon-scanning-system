@@ -1,9 +1,11 @@
 -- Cloaking Device SWEP for Clone Wars Roleplay
--- Allows stealth roles to bypass scanner detection
+-- DEPRECATED: This SWEP has been replaced with job-based bypass functionality
+-- Jobs should now define bypassScan = true in WEAPON_SCANNER_JOB_BYPASS configuration
+-- This file is kept for backwards compatibility only
 
 AddCSLuaFile()
 
-SWEP.PrintName = "Cloaking Device"
+SWEP.PrintName = "Cloaking Device (DEPRECATED)"
 SWEP.Author = "Dahhrk"
 SWEP.Spawnable = true
 SWEP.AdminOnly = true
@@ -26,6 +28,14 @@ function SWEP:Deploy()
     
     local ply = self:GetOwner()
     if not IsValid(ply) then return end
+    
+    -- Show deprecation warning
+    ply:ChatPrint("===========================================")
+    ply:ChatPrint("[DEPRECATION WARNING]")
+    ply:ChatPrint("Cloaking Device SWEP is deprecated!")
+    ply:ChatPrint("Use job-based bypass instead.")
+    ply:ChatPrint("Configure WEAPON_SCANNER_JOB_BYPASS in config.")
+    ply:ChatPrint("===========================================")
     
     -- Check team permission if configured
     if SWEP_ALLOWED_TEAMS and SWEP_ALLOWED_TEAMS["weapon_cloaking_device"] and #SWEP_ALLOWED_TEAMS["weapon_cloaking_device"] > 0 then

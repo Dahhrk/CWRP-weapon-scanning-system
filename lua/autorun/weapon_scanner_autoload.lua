@@ -85,6 +85,16 @@ else
     print("[CWRP] Logging utility is missing!")
 end
 
+-- Load Concealment System
+local concealmentPath = "utils/cwrp_concealment_system.lua"
+if file.Exists(concealmentPath, "LUA") then
+    include(concealmentPath)
+    AddCSLuaFile(concealmentPath)
+    print("[CWRP] Loaded Concealment System.")
+else
+    print("[CWRP] Concealment system is missing!")
+end
+
 -- Team Permission Check Function
 function CWRP_CheckTeamPermission(ply, swepName)
     if not IsValid(ply) then return false end
