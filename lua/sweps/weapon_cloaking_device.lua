@@ -27,6 +27,28 @@ function SWEP:Deploy()
     local ply = self:GetOwner()
     if not IsValid(ply) then return end
     
+    -- Check team permission if configured
+    if SWEP_ALLOWED_TEAMS and SWEP_ALLOWED_TEAMS["weapon_cloaking_device"] and #SWEP_ALLOWED_TEAMS["weapon_cloaking_device"] > 0 then
+        if not CWRP_CheckTeamPermission(ply, "weapon_cloaking_device") then
+            local teamName = team.GetName(ply:Team())
+            ply:ChatPrint("[SWEP RESTRICTION]: You are not authorized to use the Cloaking Device SWEP.")
+            
+            -- Log unauthorized attempt
+            CWRP_LogAction("SWEP RESTRICTION", 
+                string.format("Player %s (SteamID: %s) tried to deploy Cloaking Device SWEP (Team: %s)", 
+                    ply:Nick(), ply:SteamID(), teamName))
+            
+            -- Remove the SWEP from player
+            timer.Simple(SWEP_STRIP_DELAY or 0.1, function()
+                if IsValid(ply) and IsValid(self) then
+                    ply:StripWeapon("weapon_cloaking_device")
+                end
+            end)
+            
+            return false
+        end
+    end
+    
     ply:ChatPrint("[Cloaking Device] Deployed - Your weapons are now hidden from scanners.")
     ply:ChatPrint("[Cloaking Device] While equipped, scans will show 'Empty pockets'.")
     

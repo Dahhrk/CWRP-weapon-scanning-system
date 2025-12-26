@@ -82,6 +82,10 @@ SWEP_ALLOWED_TEAMS = {
         TEAM_TEMPLEGUARD,
         TEAM_5THFLEET,
         TEAM_COMMANDER
+    },
+    ["weapon_cloaking_device"] = {
+        -- Configure which teams can use the cloaking device
+        -- Example: TEAM_SITHSPY, TEAM_BOUNTYHUNTER
     }
 }
 
