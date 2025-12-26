@@ -17,32 +17,27 @@ if SERVER then
         end
         
         local success, jsonData = pcall(util.TableToJSON, ConfiscatedWeapons)
-        if not success then
+        if not success or not jsonData then
             print("[CWRP] ERROR: Failed to serialize confiscated weapons data!")
             return false
         end
         
-        local writeSuccess = pcall(file.Write, DATA_DIR .. "/" .. DATA_FILE, jsonData)
-        if not writeSuccess then
-            print("[CWRP] ERROR: Failed to write confiscated weapons to disk!")
-            return false
-        end
-        
+        file.Write(DATA_DIR .. "/" .. DATA_FILE, jsonData)
         print("[CWRP] Confiscated weapons saved to disk.")
         return true
     end
     
     function CWRP_LoadConfiscatedWeapons()
         if file.Exists(DATA_DIR .. "/" .. DATA_FILE, "DATA") then
-            local success, jsonData = pcall(file.Read, DATA_DIR .. "/" .. DATA_FILE, "DATA")
-            if not success then
+            local jsonData = file.Read(DATA_DIR .. "/" .. DATA_FILE, "DATA")
+            if not jsonData then
                 print("[CWRP] ERROR: Failed to read confiscated weapons from disk!")
                 ConfiscatedWeapons = {}
                 return false
             end
             
-            local parseSuccess, parsedData = pcall(util.JSONToTable, jsonData)
-            if not parseSuccess or not parsedData then
+            local success, parsedData = pcall(util.JSONToTable, jsonData)
+            if not success or not parsedData then
                 print("[CWRP] ERROR: Failed to parse confiscated weapons JSON!")
                 ConfiscatedWeapons = {}
                 return false
