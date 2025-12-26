@@ -36,23 +36,13 @@ function SWEP:PrimaryAttack()
         local weaponClass = weapon:GetClass()
         table.insert(scanResults, weaponClass)
         
-        -- Check if weapon is blacklisted or whitelisted
+        -- Check if weapon is blacklisted
         local isBlacklisted = false
-        local isWhitelisted = false
         
         if WEAPON_SCANNER_BLACKLIST then
             for _, blacklistedWeapon in ipairs(WEAPON_SCANNER_BLACKLIST) do
                 if weaponClass == blacklistedWeapon then
                     isBlacklisted = true
-                    break
-                end
-            end
-        end
-        
-        if WEAPON_SCANNER_WHITELIST then
-            for _, whitelistedWeapon in ipairs(WEAPON_SCANNER_WHITELIST) do
-                if weaponClass == whitelistedWeapon then
-                    isWhitelisted = true
                     break
                 end
             end
