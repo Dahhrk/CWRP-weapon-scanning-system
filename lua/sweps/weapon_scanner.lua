@@ -70,10 +70,37 @@ function SWEP:PrimaryAttack()
         ply:ChatPrint("Player " .. target:Nick() .. " has scanning immunity.")
         return
     end
+    
+    -- Check for stealth roles
+    if WEAPON_SCANNER_STEALTH_ROLES and WEAPON_SCANNER_STEALTH_ROLES[targetRole] then
+        local stealthMsg = WEAPON_SCANNER_MESSAGES and WEAPON_SCANNER_MESSAGES.stealthBypass or "Scan bypassed - Stealth technology detected."
+        ply:ChatPrint(stealthMsg)
+        return
+    end
+    
+    -- Check for stealth teams
+    local targetTeam = target:Team()
+    if WEAPON_SCANNER_STEALTH_TEAMS and WEAPON_SCANNER_STEALTH_TEAMS[targetTeam] then
+        local stealthMsg = WEAPON_SCANNER_MESSAGES and WEAPON_SCANNER_MESSAGES.stealthBypass or "Scan bypassed - Stealth technology detected."
+        ply:ChatPrint(stealthMsg)
+        return
+    end
+    
+    -- Check if target is using cloaking device
+    if target:HasWeapon("weapon_cloaking_device") then
+        ply:ChatPrint("Scan complete - Empty pockets detected.")
+        return
+    end
+    
+    -- Play scan sound if configured
+    if WEAPON_SCANNER_MESSAGES and WEAPON_SCANNER_MESSAGES.playScanSound and WEAPON_SCANNER_MESSAGES.scanSound then
+        ply:EmitSound(WEAPON_SCANNER_MESSAGES.scanSound)
+    end
 
     local scanResults = {}
     local blacklistedItems = {}
     local allowedItems = {}
+    local contrabandItems = {}
     
     for _, weapon in ipairs(target:GetWeapons()) do
         local weaponClass = weapon:GetClass()
@@ -91,38 +118,111 @@ function SWEP:PrimaryAttack()
             end
         end
         
+        -- Check if weapon is contraband
+        local isContraband = false
+        if WEAPON_SCANNER_CONTRABAND then
+            for _, contrabandWeapon in ipairs(WEAPON_SCANNER_CONTRABAND) do
+                if weaponClass == contrabandWeapon then
+                    isContraband = true
+                    break
+                end
+            end
+        end
+        
         -- Categorize weapon
-        if isBlacklisted then
+        if isContraband then
+            table.insert(contrabandItems, weaponClass)
+            table.insert(blacklistedItems, weaponClass)
+        elseif isBlacklisted then
             table.insert(blacklistedItems, weaponClass)
         else
             table.insert(allowedItems, weaponClass)
         end
     end
     
-    -- Display scan results
+    -- Display scan results with custom messages
+    local scanStartMsg = WEAPON_SCANNER_MESSAGES and WEAPON_SCANNER_MESSAGES.scanStart or "[SCANNING...]"
+    local scanCompleteMsg = WEAPON_SCANNER_MESSAGES and WEAPON_SCANNER_MESSAGES.scanComplete or "[SCAN COMPLETE]"
+    
+    ply:ChatPrint(scanStartMsg)
     ply:ChatPrint("=== Scan Results for " .. target:Nick() .. " ===")
     
+    -- Alert for contraband if detected
+    if #contrabandItems > 0 and WEAPON_SCANNER_CONTRABAND_ALERTS and WEAPON_SCANNER_CONTRABAND_ALERTS.enabled then
+        local contrabandMsg = WEAPON_SCANNER_MESSAGES and WEAPON_SCANNER_MESSAGES.contrabandDetected or "⚠ CRITICAL CONTRABAND DETECTED ⚠"
+        ply:ChatPrint(contrabandMsg)
+        
+        -- Play contraband alert sound
+        if WEAPON_SCANNER_CONTRABAND_ALERTS.playSound and WEAPON_SCANNER_CONTRABAND_ALERTS.soundEffect then
+            ply:EmitSound(WEAPON_SCANNER_CONTRABAND_ALERTS.soundEffect)
+        end
+        
+        -- Alert nearby authorized players
+        local alertRadius = WEAPON_SCANNER_CONTRABAND_ALERTS.alertRadius or 500
+        local alertTeams = WEAPON_SCANNER_CONTRABAND_ALERTS.alertTeams or {}
+        
+        for _, nearbyPly in ipairs(player.GetAll()) do
+            if nearbyPly ~= ply and IsValid(nearbyPly) then
+                local distance = ply:GetPos():Distance(nearbyPly:GetPos())
+                
+                -- Check if player is in alert radius and on an alert team
+                local shouldAlert = distance <= alertRadius
+                if shouldAlert and #alertTeams > 0 then
+                    shouldAlert = false
+                    local nearbyTeam = nearbyPly:Team()
+                    for _, alertTeam in ipairs(alertTeams) do
+                        if nearbyTeam == alertTeam then
+                            shouldAlert = true
+                            break
+                        end
+                    end
+                end
+                
+                if shouldAlert then
+                    nearbyPly:ChatPrint("⚠ [ALERT] Contraband detected on " .. target:Nick() .. " by " .. ply:Nick())
+                    if WEAPON_SCANNER_CONTRABAND_ALERTS.playSound and WEAPON_SCANNER_CONTRABAND_ALERTS.soundEffect then
+                        nearbyPly:EmitSound(WEAPON_SCANNER_CONTRABAND_ALERTS.soundEffect)
+                    end
+                end
+            end
+        end
+    end
+    
     if #blacklistedItems > 0 then
-        ply:ChatPrint("BLACKLISTED ITEMS:")
+        local blacklistedHeader = WEAPON_SCANNER_MESSAGES and WEAPON_SCANNER_MESSAGES.blacklistedHeader or "BLACKLISTED ITEMS:"
+        ply:ChatPrint(blacklistedHeader)
         for _, weaponClass in ipairs(blacklistedItems) do
-            ply:ChatPrint("  [!] " .. weaponClass)
+            local prefix = "[!]"
+            -- Mark contraband with special indicator
+            for _, contrabandWeapon in ipairs(contrabandItems) do
+                if weaponClass == contrabandWeapon then
+                    prefix = "[⚠]"
+                    break
+                end
+            end
+            ply:ChatPrint("  " .. prefix .. " " .. weaponClass)
         end
     end
     
     if #allowedItems > 0 then
-        ply:ChatPrint("ALLOWED ITEMS:")
+        local allowedHeader = WEAPON_SCANNER_MESSAGES and WEAPON_SCANNER_MESSAGES.allowedHeader or "ALLOWED ITEMS:"
+        ply:ChatPrint(allowedHeader)
         for _, weaponClass in ipairs(allowedItems) do
             ply:ChatPrint("  [✓] " .. weaponClass)
         end
     end
     
     if #scanResults == 0 then
-        ply:ChatPrint("No weapons detected.")
+        local noWeaponsMsg = WEAPON_SCANNER_MESSAGES and WEAPON_SCANNER_MESSAGES.noWeapons or "No weapons detected."
+        ply:ChatPrint(noWeaponsMsg)
     end
+    
+    ply:ChatPrint(scanCompleteMsg)
 
     hook.Run("CWRP_PlayerScanned", ply, target, {
         detectedWeapons = scanResults,
         blacklistedItems = blacklistedItems,
-        allowedItems = allowedItems
+        allowedItems = allowedItems,
+        contrabandItems = contrabandItems
     })
 end
