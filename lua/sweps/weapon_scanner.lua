@@ -97,11 +97,11 @@ function SWEP:PrimaryAttack()
             return true, WEAPON_SCANNER_MESSAGES and WEAPON_SCANNER_MESSAGES.stealthBypass or "Scan bypassed - Stealth technology detected."
         end
         
-        -- Check if target is using cloaking device (DEPRECATED)
-        if target:HasWeapon("weapon_cloaking_device") then
-            -- Log cloaking device usage
-            CWRP_LogAction("CLOAKING DEVICE", 
-                string.format("Player %s (SteamID: %s) used cloaking device to bypass scan by %s", 
+        -- Check if target is using bypass scanning swep (DEPRECATED)
+        if target:HasWeapon("weapon_bypass_scanning_swep") then
+            -- Log bypass scanning swep usage
+            CWRP_LogAction("BYPASS SCANNING SWEP", 
+                string.format("Player %s (SteamID: %s) used bypass scanning swep to bypass scan by %s", 
                     target:Nick(), target:SteamID(), ply:Nick()))
             
             return true, "Scan complete - Empty pockets detected."

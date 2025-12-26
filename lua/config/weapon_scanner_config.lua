@@ -740,7 +740,7 @@ WEAPON_SCANNER_MESSAGES = {
 -- weapon_scanner: The primary scanning tool for detecting weapons
 -- weapon_confiscator: Tool for confiscating unauthorized items
 -- weapon_drop: Tool for dropping confiscated items
--- weapon_cloaking_device: DEPRECATED - Use WEAPON_SCANNER_JOB_BYPASS instead
+-- weapon_bypass_scanning_swep: DEPRECATED - Use WEAPON_SCANNER_JOB_BYPASS instead
 -- 
 -- HOW IT WORKS:
 -- - When a player equips a SWEP, their team is checked against this list
@@ -822,13 +822,13 @@ SWEP_ALLOWED_TEAMS = {
         TEAM_COMMANDER
     },
     
-    -- Weapon Cloaking Device: DEPRECATED
+    -- Weapon Bypass Scanning SWEP: DEPRECATED
     -- This SWEP is deprecated - use WEAPON_SCANNER_JOB_BYPASS instead
     -- Kept for backwards compatibility but will show deprecation warning
     -- Recommendation: Remove this from job loadouts and use job bypass system
-    ["weapon_cloaking_device"] = {
+    ["weapon_bypass_scanning_swep"] = {
         -- DEPRECATED: Configure job-based bypass in WEAPON_SCANNER_JOB_BYPASS instead
-        -- Leave empty to prevent any team from using deprecated cloaking device
+        -- Leave empty to prevent any team from using deprecated bypass scanning swep
     }
 }
 
