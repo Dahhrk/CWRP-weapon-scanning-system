@@ -271,5 +271,3 @@ if CLIENT then
         net.SendToServer()
     end)
 end
-
-print("[CWRP] Concealment system loaded.")

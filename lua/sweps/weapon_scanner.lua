@@ -85,28 +85,34 @@ function SWEP:PrimaryAttack()
         return
     end
     
-    -- Check for stealth roles (DEPRECATED - kept for backwards compatibility)
-    if WEAPON_SCANNER_STEALTH_ROLES and WEAPON_SCANNER_STEALTH_ROLES[targetRole] then
-        local stealthMsg = WEAPON_SCANNER_MESSAGES and WEAPON_SCANNER_MESSAGES.stealthBypass or "Scan bypassed - Stealth technology detected."
-        ply:ChatPrint(stealthMsg)
-        return
-    end
-    
-    -- Check for stealth teams (DEPRECATED - kept for backwards compatibility)
-    if WEAPON_SCANNER_STEALTH_TEAMS and WEAPON_SCANNER_STEALTH_TEAMS[targetTeam] then
-        local stealthMsg = WEAPON_SCANNER_MESSAGES and WEAPON_SCANNER_MESSAGES.stealthBypass or "Scan bypassed - Stealth technology detected."
-        ply:ChatPrint(stealthMsg)
-        return
-    end
-    
-    -- Check if target is using cloaking device (DEPRECATED - kept for backwards compatibility)
-    if target:HasWeapon("weapon_cloaking_device") then
-        -- Log cloaking device usage
-        CWRP_LogAction("CLOAKING DEVICE", 
-            string.format("Player %s (SteamID: %s) used cloaking device to bypass scan by %s", 
-                target:Nick(), target:SteamID(), ply:Nick()))
+    -- Check for stealth/job bypass (backwards compatibility helper)
+    local function CheckBackwardsCompatibilityBypass()
+        -- Check for stealth roles (DEPRECATED)
+        if WEAPON_SCANNER_STEALTH_ROLES and WEAPON_SCANNER_STEALTH_ROLES[targetRole] then
+            return true, WEAPON_SCANNER_MESSAGES and WEAPON_SCANNER_MESSAGES.stealthBypass or "Scan bypassed - Stealth technology detected."
+        end
         
-        ply:ChatPrint("Scan complete - Empty pockets detected.")
+        -- Check for stealth teams (DEPRECATED)
+        if WEAPON_SCANNER_STEALTH_TEAMS and WEAPON_SCANNER_STEALTH_TEAMS[targetTeam] then
+            return true, WEAPON_SCANNER_MESSAGES and WEAPON_SCANNER_MESSAGES.stealthBypass or "Scan bypassed - Stealth technology detected."
+        end
+        
+        -- Check if target is using cloaking device (DEPRECATED)
+        if target:HasWeapon("weapon_cloaking_device") then
+            -- Log cloaking device usage
+            CWRP_LogAction("CLOAKING DEVICE", 
+                string.format("Player %s (SteamID: %s) used cloaking device to bypass scan by %s", 
+                    target:Nick(), target:SteamID(), ply:Nick()))
+            
+            return true, "Scan complete - Empty pockets detected."
+        end
+        
+        return false, nil
+    end
+    
+    local bypassActive, bypassMessage = CheckBackwardsCompatibilityBypass()
+    if bypassActive then
+        ply:ChatPrint(bypassMessage)
         return
     end
     
@@ -292,9 +298,11 @@ function SWEP:PrimaryAttack()
                     end
                     
                     if shouldAlert then
+                        -- Pre-format alert message for efficiency
+                        local alertMsg = WEAPON_SCANNER_MESSAGES and WEAPON_SCANNER_MESSAGES.dangerAlert or "[ALERT] High-danger item detected: %s in %s's inventory!"
+                        
                         -- Send detailed alert for each red item
                         for _, redItem in ipairs(redItems) do
-                            local alertMsg = WEAPON_SCANNER_MESSAGES and WEAPON_SCANNER_MESSAGES.dangerAlert or "[ALERT] High-danger item detected: %s in %s's inventory!"
                             nearbyPly:ChatPrint(string.format(alertMsg, redItem, target:Nick()))
                         end
                         
