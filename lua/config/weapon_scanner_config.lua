@@ -8,3 +8,26 @@ WEAPON_SCANNER_ROLE_BYPASS = {
     ["VIP"] = true,
     ["Sith"] = true
 }
+
+-- Team-Based Restrictions for SWEPs
+-- Configure which teams are allowed to use each SWEP
+SWEP_ALLOWED_TEAMS = {
+    ["weapon_scanner"] = {
+        TEAM_SHOCK,
+        TEAM_TEMPLEGUARD,
+        TEAM_5THFLEET,
+        TEAM_COMMANDER
+    },
+    ["weapon_confiscator"] = {
+        TEAM_SHOCK,
+        TEAM_TEMPLEGUARD,
+        TEAM_5THFLEET,
+        TEAM_COMMANDER
+    },
+    ["weapon_drop"] = {
+        TEAM_SHOCK,
+        TEAM_TEMPLEGUARD,
+        TEAM_5THFLEET,
+        TEAM_COMMANDER
+    }
+}

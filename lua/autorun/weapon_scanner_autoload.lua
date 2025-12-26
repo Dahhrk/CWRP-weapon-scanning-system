@@ -85,6 +85,29 @@ else
     print("[CWRP] Logging utility is missing!")
 end
 
+-- Team Permission Check Function
+function CWRP_CheckTeamPermission(ply, swepName)
+    if not IsValid(ply) then return false end
+    
+    -- Get allowed teams for this SWEP
+    local allowedTeams = SWEP_ALLOWED_TEAMS and SWEP_ALLOWED_TEAMS[swepName]
+    if not allowedTeams then
+        -- If no configuration exists, deny by default
+        return false
+    end
+    
+    local playerTeam = ply:Team()
+    
+    -- Check if player's team is in the allowed list
+    for _, teamID in ipairs(allowedTeams) do
+        if playerTeam == teamID then
+            return true
+        end
+    end
+    
+    return false
+end
+
 -- Load NPCs
 local npcFiles = file.Find("npcs/*.lua", "LUA")
 for _, npcFile in ipairs(npcFiles) do
