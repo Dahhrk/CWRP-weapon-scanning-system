@@ -9,6 +9,56 @@ WEAPON_SCANNER_ROLE_BYPASS = {
     ["Sith"] = true
 }
 
+-- Critical Contraband Configuration
+-- Items in this list will trigger special alerts when detected
+WEAPON_SCANNER_CONTRABAND = {
+    "weapon_rpg",
+    "weapon_frag",
+    "weapon_slam",
+    "ls_lightsaber",
+    "weapon_c4"
+}
+
+-- Contraband Alert Settings
+WEAPON_SCANNER_CONTRABAND_ALERTS = {
+    enabled = true,
+    alertRadius = 500, -- Radius in units to alert nearby players
+    soundEffect = "buttons/button17.wav", -- Optional sound effect path
+    playSound = true,
+    alertTeams = { -- Teams that should receive contraband alerts
+        TEAM_SHOCK,
+        TEAM_TEMPLEGUARD,
+        TEAM_5THFLEET,
+        TEAM_COMMANDER
+    }
+}
+
+-- Stealth and Anti-Detection Configuration
+-- Roles that can bypass scanner detection
+WEAPON_SCANNER_STEALTH_ROLES = {
+    ["SithAssassin"] = true,
+    ["Spy"] = true
+}
+
+-- Teams that can bypass scanner detection
+WEAPON_SCANNER_STEALTH_TEAMS = {
+    -- TEAM_SITHSPY = true,
+    -- TEAM_BOUNTYHUNTER = true
+}
+
+-- Scan Message Customization
+WEAPON_SCANNER_MESSAGES = {
+    scanStart = "[SCANNING...]",
+    scanComplete = "[SCAN COMPLETE]",
+    noWeapons = "No weapons detected.",
+    allowedHeader = "ALLOWED ITEMS:",
+    blacklistedHeader = "BLACKLISTED ITEMS:",
+    contrabandDetected = "⚠ CRITICAL CONTRABAND DETECTED ⚠",
+    stealthBypass = "Scan bypassed - Stealth technology detected.",
+    scanSound = "buttons/button14.wav", -- Optional scan sound
+    playScanSound = true
+}
+
 -- Team-Based Restrictions for SWEPs
 -- Configure which teams are allowed to use each SWEP
 -- NOTE: Team constants (TEAM_SHOCK, TEAM_TEMPLEGUARD, etc.) must be defined
@@ -32,6 +82,10 @@ SWEP_ALLOWED_TEAMS = {
         TEAM_TEMPLEGUARD,
         TEAM_5THFLEET,
         TEAM_COMMANDER
+    },
+    ["weapon_cloaking_device"] = {
+        -- Configure which teams can use the cloaking device
+        -- Example: TEAM_SITHSPY, TEAM_BOUNTYHUNTER
     }
 }
 
