@@ -13,11 +13,16 @@ function ENT:AcceptInput(name, caller)
     end
 
     local steamID = caller:SteamID()
-    if ConfiscatedWeapons[steamID] then
-        for _, weapon in ipairs(ConfiscatedWeapons[steamID]) do
+    if ConfiscatedWeapons[steamID] and ConfiscatedWeapons[steamID].weapons then
+        for _, weapon in ipairs(ConfiscatedWeapons[steamID].weapons) do
             caller:Give(weapon)
         end
         ConfiscatedWeapons[steamID] = nil
+        
+        -- Save changes to disk
+        if CWRP_SaveConfiscatedWeapons then
+            CWRP_SaveConfiscatedWeapons()
+        end
     else
         caller:ChatPrint("You have no confiscated weapons.")
     end
