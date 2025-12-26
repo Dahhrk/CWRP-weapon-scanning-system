@@ -1,281 +1,301 @@
-# Implementation Summary
-
-This document summarizes the implementation of three major enhancements to the CWRP Weapon Scanning System.
+# CWRP Weapon Scanning System - Implementation Summary
 
 ## Overview
+This document summarizes the comprehensive upgrade to the CWRP Weapon Scanning System, implementing all requested features from the problem statement.
 
-All requested features have been successfully implemented with:
-- ✓ Minimal code changes (523 lines added across 5 files)
-- ✓ Backward compatibility maintained
-- ✓ Comprehensive documentation
-- ✓ Code review completed and issues addressed
-- ✓ Security checks passed
-- ✓ All Lua files validated for syntax
+---
 
-## Feature Implementation Details
+## Implemented Features
 
-### 1. Contraband Detection and Alerts
+### 1. ✅ Job-Based Scan Bypass (Replaces Cloaking SWEP)
 
-**Configuration Added:**
+**Implementation Location**: 
+- `lua/config/weapon_scanner_config.lua` - Configuration table `WEAPON_SCANNER_JOB_BYPASS`
+- `lua/sweps/weapon_scanner.lua` - Bypass checking logic (lines 67-78)
+- `lua/sweps/weapon_cloaking_device.lua` - Deprecated with warning message
+
+**How it Works**:
+- Jobs configured in `WEAPON_SCANNER_JOB_BYPASS` cannot be scanned
+- Scanner checks target's team ID against bypass list
+- Guards receive message: "This role cannot be scanned."
+- All bypass attempts are logged to admin logs
+- Cloaking Device SWEP now shows deprecation warning when equipped
+
+**Configuration Example**:
 ```lua
-WEAPON_SCANNER_CONTRABAND = {
-    "weapon_rpg",
-    "weapon_frag",
-    "weapon_slam",
-    "ls_lightsaber",
-    "weapon_c4"
-}
-
-WEAPON_SCANNER_CONTRABAND_ALERTS = {
-    enabled = true,
-    alertRadius = 500,
-    soundEffect = "buttons/button17.wav",
-    playSound = true,
-    alertTeams = {
-        TEAM_SHOCK,
-        TEAM_TEMPLEGUARD,
-        TEAM_5THFLEET,
-        TEAM_COMMANDER
-    }
-}
-```
-
-**Features Implemented:**
-- Critical contraband items trigger special alerts
-- Nearby guards receive automatic notifications
-- Configurable alert radius (default: 500 units)
-- Optional sound effects for alerts
-- Contraband items marked with [⚠] indicator
-- Team-based alert targeting
-- Performance optimized with O(1) lookup table
-
-**Example Output:**
-```
-[SCANNING...]
-=== Scan Results for Player ===
-⚠ CRITICAL CONTRABAND DETECTED ⚠
-BLACKLISTED ITEMS:
-  [⚠] weapon_rpg
-  [⚠] ls_lightsaber
-ALLOWED ITEMS:
-  [✓] weapon_physgun
-[SCAN COMPLETE]
-```
-
-### 2. Stealth and Anti-Detection Mechanics
-
-**Configuration Added:**
-```lua
-WEAPON_SCANNER_STEALTH_ROLES = {
-    ["SithAssassin"] = true,
-    ["Spy"] = true
-}
-
-WEAPON_SCANNER_STEALTH_TEAMS = {
+WEAPON_SCANNER_JOB_BYPASS = {
     [TEAM_SITHSPY] = true,
-    [TEAM_BOUNTYHUNTER] = true
+    [TEAM_SPECIALAGENT] = true
 }
+```
 
-SWEP_ALLOWED_TEAMS = {
-    ["weapon_cloaking_device"] = {
-        -- Configure teams that can use cloaking device
+---
+
+### 2. ✅ Danger Level Highlighting
+
+**Implementation Location**:
+- `lua/config/weapon_scanner_config.lua` - `ITEM_DANGER_LEVELS` table
+- `lua/sweps/weapon_scanner.lua` - `GetDangerLevel()` helper function and categorization logic
+
+**How it Works**:
+- Items are categorized into three danger levels:
+  - **Green**: Low threat (med kits, tools)
+  - **Yellow**: Questionable/restricted (basic weapons, lockpicks)
+  - **Red**: High-danger contraband (explosives, lightsabers)
+- Scanner displays items grouped by danger level
+- Visual indicators: [⚠] for red, [!] for yellow, [✓] for green
+- Backwards compatible with old BLACKLIST/WHITELIST system
+
+**Configuration Example**:
+```lua
+ITEM_DANGER_LEVELS = {
+    ["med_kit"] = "green",
+    ["weapon_pistol"] = "yellow",
+    ["weapon_rpg"] = "red"
+}
+```
+
+---
+
+### 3. ✅ Item-Job Exceptions
+
+**Implementation Location**:
+- `lua/config/weapon_scanner_config.lua` - `ITEM_JOB_EXCEPTIONS` table
+- `lua/sweps/weapon_scanner.lua` - Exception checking in `GetDangerLevel()` function
+
+**How it Works**:
+- Define which items are allowed/restricted for specific jobs
+- Exceptions override default danger levels
+- Format: `["weapon_class"] = { [TEAM_ID] = "allowed" | "red" | "yellow" | "green" }`
+- Example: Lightsabers allowed for Jedi, red for civilians
+
+**Configuration Example**:
+```lua
+ITEM_JOB_EXCEPTIONS = {
+    ["weapon_lightsaber"] = {
+        [TEAM_JEDI] = "allowed",
+        [TEAM_SITH] = "allowed",
+        [TEAM_CIVILIAN] = "red"
     }
 }
 ```
 
-**Features Implemented:**
-- Role-based stealth bypass (by usergroup)
-- Team-based stealth bypass (by team ID)
-- New Cloaking Device SWEP
-- Cloaking device spoofs scans to show "Empty pockets"
-- Team permission checking for cloaking device
-- Logging integration for cloaking device usage
-- Billy's Logs integration
+---
 
-**Cloaking Device Features:**
-- Passive effect while equipped
-- No attack functionality (stealth tool only)
-- Clear user feedback on deploy/holster
-- Team-based access control
-- Logs all usage attempts
+### 4. ✅ Concealment Mechanic
 
-### 3. Customized Scan Messages
+**Implementation Location**:
+- `lua/utils/cwrp_concealment_system.lua` - Complete concealment system (new file)
+- `lua/config/weapon_scanner_config.lua` - `WEAPON_SCANNER_CONCEALMENT` configuration
+- `lua/autorun/weapon_scanner_autoload.lua` - Loads concealment system
+- `lua/sweps/weapon_scanner.lua` - Checks for concealed items during scan
 
-**Configuration Added:**
+**How it Works**:
+- Players can hide items into "concealment slots" during searches
+- Uses network messages for client-server communication
+- Progress bar shows concealment time
+- Concealment cancelled if player moves >50 units
+- Large items and high-danger items take longer to conceal
+- Maximum concealed slots: 2 (configurable)
+- Certain items (like RPGs, C4) cannot be concealed
+- Concealed items are skipped during scans
+
+**Commands**:
+- `cwrp_conceal_weapon <weapon_class>` - Start concealing
+- `cwrp_reveal_weapon <weapon_class>` - Reveal concealed item
+
+**Configuration Example**:
 ```lua
-WEAPON_SCANNER_MESSAGES = {
-    scanStart = "[SCANNING...]",
-    scanComplete = "[SCAN COMPLETE]",
-    noWeapons = "No weapons detected.",
-    allowedHeader = "ALLOWED ITEMS:",
-    blacklistedHeader = "BLACKLISTED ITEMS:",
-    contrabandDetected = "⚠ CRITICAL CONTRABAND DETECTED ⚠",
-    stealthBypass = "Scan bypassed - Stealth technology detected.",
-    scanSound = "buttons/button14.wav",
-    playScanSound = true
+WEAPON_SCANNER_CONCEALMENT = {
+    enabled = true,
+    maxConcealedSlots = 2,
+    concealTime = 3,
+    largeItemMultiplier = 2,
+    dangerItemMultiplier = 1.5,
+    unconcealableItems = {"weapon_rpg", "weapon_c4"}
 }
 ```
 
-**Features Implemented:**
-- Fully customizable scan messages
-- Localization support for all messages
-- Clear category headers (ALLOWED/BLACKLISTED)
-- Optional scan sound effects
-- Improved RP immersion
-- Server-specific theming support
+---
 
-## Integration Features
+### 5. ✅ Systematic Slot-by-Slot Scanning
 
-### Hook Enhancements
-The `CWRP_PlayerScanned` hook now includes:
+**Implementation Location**:
+- `lua/config/weapon_scanner_config.lua` - `WEAPON_SCANNER_SYSTEMATIC` configuration
+- `lua/sweps/weapon_scanner.lua` - `ScanSlot()` function with progressive scanning
+
+**How it Works**:
+- Items revealed one slot at a time with configurable delay
+- Creates tension during scans
+- Shows progress: "[SCANNING] Slot 3/5..."
+- Can be cancelled if target moves beyond max distance
+- Delay configurable per slot (default: 1 second)
+- Falls back to instant scan if disabled or delay = 0
+
+**Configuration Example**:
 ```lua
-hook.Run("CWRP_PlayerScanned", scanner, target, {
-    detectedWeapons = scanResults,
-    blacklistedItems = blacklistedItems,
-    allowedItems = allowedItems,
-    contrabandItems = contrabandItems  -- NEW
-})
+WEAPON_SCANNER_SYSTEMATIC = {
+    enabled = true,
+    slotDelay = 1,           -- 1 second per slot
+    showProgress = true,
+    cancelOnMove = false,
+    maxScanDistance = 200
+}
 ```
 
-### Logging Integration
-- Cloaking device usage logged to Billy's Logs
-- Stealth bypasses can be tracked
-- Unauthorized SWEP access attempts logged
+---
 
-## Code Quality
+### 6. ✅ Enhanced Guard Alerts
 
-### Performance Optimizations
-- Contraband lookup uses O(1) hash table instead of O(n*m) nested loops
-- Single-pass weapon categorization
-- Efficient alert radius checking
+**Implementation Location**:
+- `lua/sweps/weapon_scanner.lua` - Alert system in `DisplayScanResults()` function
+- `lua/config/weapon_scanner_config.lua` - Alert message configuration
 
-### Code Review Fixes Applied
-1. ✓ Optimized contraband detection with lookup table
-2. ✓ Removed nested loop in contraband indicator display
-3. ✓ Fixed cloaking device logging to execute before early return
+**How it Works**:
+- Real-time notifications when red-danger items detected
+- Item-specific alerts: "[ALERT] High-danger item detected: weapon_rpg in Player123's inventory!"
+- Alerts sent to nearby guards within configured radius
+- Team filtering - only configured teams receive alerts
+- Sound effects play for alerted guards
+- Enhanced from previous contraband alert system
 
-### Security
-- ✓ CodeQL security checks passed
-- ✓ No vulnerabilities introduced
-- ✓ Proper permission checking on all new features
-- ✓ Team-based access control enforced
+**Alert Flow**:
+1. Scanner detects red item
+2. Scanner sees "[⚠ CRITICAL CONTRABAND DETECTED ⚠]"
+3. Nearby guards (within radius, on alert teams) receive individual alerts per red item
+4. Sound effect plays for all alerted players
 
-## Documentation
+---
 
-### README.md Updates
-- Feature overview section
-- Configuration examples
-- Key features list updated
+### 7. ✅ Comprehensive Admin Logging
 
-### EXAMPLES.md (New File)
-- Comprehensive usage scenarios
-- Configuration examples
-- Integration examples
-- Troubleshooting guide
-- Best practices
+**Implementation Location**:
+- `lua/utils/cwrp_logging_util.lua` - Enhanced logging functions
+- `lua/sweps/weapon_scanner.lua` - Scan logging
+- `lua/sweps/weapon_confiscator.lua` - Confiscation logging
+- `lua/utils/cwrp_concealment_system.lua` - Concealment logging
 
-## Backward Compatibility
+**How it Works**:
+- All security actions logged with full details
+- Console logging (if enabled)
+- Billy's Logs integration (if available)
+- Structured log format with key-value pairs
 
-All changes are backward compatible:
-- Existing configurations work without changes
-- New features are optional
-- Default values provided for all new settings
-- No breaking changes to existing functionality
-- Existing hooks and integrations unchanged
+**What Gets Logged**:
+- **Scans**: Scanner, target, team, all items by danger level
+- **Confiscations**: Confiscator, target, all confiscated items
+- **Job Bypasses**: Who bypassed, what team, who tried to scan
+- **Concealment**: What was concealed/revealed, by whom
+- **SWEP Restrictions**: Unauthorized access attempts
 
-## Testing Validation
+**Example Log Output**:
+```
+[WEAPON SCAN] Guard ShockTrooper scanned Suspect (Team: Civilian) - Red: 2, Yellow: 1, Green: 2, Allowed: 0
+  | scanner: ShockTrooper | scannerSteamID: STEAM_0:1:12345
+  | target: Suspect | targetSteamID: STEAM_0:1:67890
+  | redItems: weapon_rpg, weapon_c4
+  | yellowItems: weapon_pistol
+  | greenItems: med_kit, armor_kit
+```
 
-### Syntax Validation
-All Lua files validated with luac:
-- ✓ weapon_scanner.lua
-- ✓ weapon_cloaking_device.lua
-- ✓ weapon_scanner_config.lua
-- ✓ All other existing files
+---
 
-### Feature Testing Scenarios
-Documented in EXAMPLES.md:
-- Contraband detection with alerts
-- Role-based stealth bypass
-- Team-based stealth bypass
-- Cloaking device usage
-- Custom message display
-- Combined feature scenarios
+## Updated Configuration File Structure
 
-## Configuration Guide
+### New Configuration Tables:
+1. `WEAPON_SCANNER_JOB_BYPASS` - Job-based scan bypass
+2. `ITEM_DANGER_LEVELS` - Danger level definitions
+3. `ITEM_JOB_EXCEPTIONS` - Item-job permission exceptions
+4. `WEAPON_SCANNER_CONCEALMENT` - Concealment system settings
+5. `WEAPON_SCANNER_SYSTEMATIC` - Systematic scanning settings
 
-### Quick Start
-1. Add contraband items to `WEAPON_SCANNER_CONTRABAND`
-2. Configure alert settings in `WEAPON_SCANNER_CONTRABAND_ALERTS`
-3. Set stealth roles in `WEAPON_SCANNER_STEALTH_ROLES`
-4. Set stealth teams in `WEAPON_SCANNER_STEALTH_TEAMS`
-5. Customize messages in `WEAPON_SCANNER_MESSAGES`
-6. Configure cloaking device access in `SWEP_ALLOWED_TEAMS`
+### Enhanced Tables:
+1. `WEAPON_SCANNER_MESSAGES` - Added danger level headers and alert messages
+2. `WEAPON_SCANNER_CONTRABAND_ALERTS` - Enhanced with item-specific alerts
 
-### Optional Features
-All features can be disabled:
-- Set `WEAPON_SCANNER_CONTRABAND_ALERTS.enabled = false` to disable alerts
-- Set `playScanSound = false` to disable scan sounds
-- Set `playSound = false` to disable contraband alert sounds
-- Leave `WEAPON_SCANNER_STEALTH_ROLES` empty to disable role stealth
-- Leave `WEAPON_SCANNER_STEALTH_TEAMS` empty to disable team stealth
+### Deprecated (Kept for Backwards Compatibility):
+1. `WEAPON_SCANNER_STEALTH_ROLES` - Use `WEAPON_SCANNER_JOB_BYPASS` instead
+2. `WEAPON_SCANNER_STEALTH_TEAMS` - Use `WEAPON_SCANNER_JOB_BYPASS` instead
 
-## Files Modified
+---
 
-1. **lua/config/weapon_scanner_config.lua** (+54 lines)
-   - Added contraband configuration
-   - Added alert settings
-   - Added stealth role/team configuration
-   - Added message customization
-   - Added cloaking device team permissions
+## New Files Created
 
-2. **lua/sweps/weapon_scanner.lua** (+111 lines, -8 lines)
-   - Added stealth role checking
-   - Added stealth team checking
-   - Added cloaking device detection
-   - Added contraband detection
-   - Added alert system
-   - Added custom message support
-   - Optimized performance
+1. **lua/utils/cwrp_concealment_system.lua**
+   - Complete concealment mechanic
+   - Client-side UI with progress bar
+   - Server-side validation and tracking
+   - Network message handling
 
-3. **lua/sweps/weapon_cloaking_device.lua** (+80 lines, new file)
-   - New SWEP for stealth mechanics
-   - Team permission checking
-   - User feedback messages
-   - Logging integration
+---
 
-4. **README.md** (+65 lines)
-   - Feature documentation
-   - Configuration examples
-   - Updated feature list
+## Modified Files
 
-5. **EXAMPLES.md** (+213 lines, new file)
-   - Comprehensive usage examples
-   - Configuration scenarios
-   - Troubleshooting guide
+1. **lua/config/weapon_scanner_config.lua**
+   - Added all new configuration tables
+   - Enhanced message configuration
+   - Marked deprecated settings
+
+2. **lua/sweps/weapon_scanner.lua**
+   - Complete rewrite of scanning logic
+   - Added danger level categorization
+   - Implemented systematic scanning
+   - Enhanced alert system
+   - Added admin logging
+   - Job bypass checking
+
+3. **lua/sweps/weapon_cloaking_device.lua**
+   - Added deprecation warnings
+   - Kept functionality for backwards compatibility
+
+4. **lua/sweps/weapon_confiscator.lua**
+   - Enhanced admin logging
+
+5. **lua/utils/cwrp_logging_util.lua**
+   - Added console logging support
+   - Enhanced structured logging
+   - Added specific logging functions for scans and confiscations
+
+6. **lua/autorun/weapon_scanner_autoload.lua**
+   - Added concealment system loading
+
+7. **README.md**
+   - Complete rewrite with all new features
+   - Migration guide from cloaking device
+   - Configuration guide
+   - Deprecation notices
+
+8. **EXAMPLES.md**
+   - Complete rewrite with comprehensive examples
+   - All new features documented
+   - Troubleshooting section
    - Best practices
 
-## Success Metrics
+---
 
-- ✓ All three requested features implemented
-- ✓ Code review completed with all issues addressed
-- ✓ Security checks passed
-- ✓ Comprehensive documentation provided
-- ✓ Backward compatibility maintained
-- ✓ Performance optimized
-- ✓ Minimal code changes (523 lines total)
-- ✓ Zero breaking changes
-- ✓ All Lua syntax validated
+## Backwards Compatibility
 
-## Next Steps
+All changes maintain backwards compatibility:
 
-The implementation is complete and ready for deployment. Server administrators should:
+1. **Old contraband system** still works - items in `WEAPON_SCANNER_CONTRABAND` automatically treated as red
+2. **Old blacklist/whitelist** still works - integrated into danger level system
+3. **Cloaking device** still functions but shows deprecation warning
+4. **Stealth roles/teams** still work but deprecated in favor of job bypass
+5. **Existing hooks** (`CWRP_PlayerScanned`, `CWRP_PlayerConfiscated`) enhanced with new data but old data still present
 
-1. Review the configuration options in `weapon_scanner_config.lua`
-2. Customize contraband items for their server
-3. Configure alert teams and radius
-4. Set up stealth roles/teams if desired
-5. Customize scan messages for server theme
-6. Configure cloaking device access
-7. Test in development environment before production deployment
+---
 
-Refer to EXAMPLES.md for detailed usage scenarios and troubleshooting.
+## Conclusion
+
+All 8 major features from the problem statement have been successfully implemented:
+
+1. ✅ Job-Based Scan Bypass (replaces Cloaking SWEP)
+2. ✅ Danger Level Highlighting (red/yellow/green)
+3. ✅ Item-Job Exceptions
+4. ✅ Concealment Mechanic
+5. ✅ Systematic Slot-by-Slot Scanning
+6. ✅ Enhanced Guard Alerts
+7. ✅ Comprehensive Admin Logging
+8. ✅ Updated Documentation
+
+The system is production-ready, fully backwards compatible, and extensively documented.
