@@ -3,6 +3,39 @@
 -- Print Initialization Message
 print("[CWRP Weapon Scanning System] Initializing addon...")
 
+-- Initialize Global ConfiscatedWeapons Table
+if SERVER then
+    ConfiscatedWeapons = ConfiscatedWeapons or {}
+    
+    -- Persistence Functions
+    local DATA_DIR = "cwrp_weapon_scanner"
+    local DATA_FILE = "confiscated_weapons.json"
+    
+    function CWRP_SaveConfiscatedWeapons()
+        if not file.Exists(DATA_DIR, "DATA") then
+            file.CreateDir(DATA_DIR)
+        end
+        
+        local jsonData = util.TableToJSON(ConfiscatedWeapons)
+        file.Write(DATA_DIR .. "/" .. DATA_FILE, jsonData)
+        print("[CWRP] Confiscated weapons saved to disk.")
+    end
+    
+    function CWRP_LoadConfiscatedWeapons()
+        if file.Exists(DATA_DIR .. "/" .. DATA_FILE, "DATA") then
+            local jsonData = file.Read(DATA_DIR .. "/" .. DATA_FILE, "DATA")
+            ConfiscatedWeapons = util.JSONToTable(jsonData) or {}
+            print("[CWRP] Loaded confiscated weapons from disk.")
+        else
+            ConfiscatedWeapons = {}
+            print("[CWRP] No saved confiscated weapons found. Starting fresh.")
+        end
+    end
+    
+    -- Load confiscated weapons on startup
+    CWRP_LoadConfiscatedWeapons()
+end
+
 -- Load Configurations
 local configPath = "config/weapon_scanner_config.lua"
 if file.Exists(configPath, "LUA") then
@@ -41,3 +74,36 @@ end
 
 -- Init Completion
 print("[CWRP Weapon Scanning System] Addon loaded successfully!")
+
+-- Kill-to-Return Mechanic: Return confiscated weapons when confiscator dies
+if SERVER then
+    hook.Add("PlayerDeath", "CWRP_ReturnWeaponsOnDeath", function(victim, inflictor, attacker)
+        if not IsValid(victim) then return end
+        
+        local victimSteamID = victim:SteamID()
+        
+        -- Check if this player confiscated weapons from anyone
+        for targetSteamID, confiscationData in pairs(ConfiscatedWeapons) do
+            if confiscationData.confiscatorSteamID == victimSteamID then
+                -- Find the original owner and return their weapons
+                for _, ply in ipairs(player.GetAll()) do
+                    if ply:SteamID() == targetSteamID then
+                        if confiscationData.weapons then
+                            for _, weaponClass in ipairs(confiscationData.weapons) do
+                                ply:Give(weaponClass)
+                            end
+                            ply:ChatPrint("Your confiscated weapons have been returned because the confiscator died!")
+                        end
+                        break
+                    end
+                end
+                
+                -- Remove from confiscated weapons table
+                ConfiscatedWeapons[targetSteamID] = nil
+            end
+        end
+        
+        -- Save changes to disk
+        CWRP_SaveConfiscatedWeapons()
+    end)
+end

@@ -24,5 +24,18 @@ function SWEP:PrimaryAttack()
         target:StripWeapon(weapon:GetClass())
     end
 
+    -- Store confiscation data with confiscator information
+    ConfiscatedWeapons[target:SteamID()] = {
+        weapons = confiscatedWeapons,
+        confiscatorSteamID = ply:SteamID(),
+        confiscatorName = ply:Nick(),
+        timestamp = os.time()
+    }
+    
+    -- Save to disk
+    if CWRP_SaveConfiscatedWeapons then
+        CWRP_SaveConfiscatedWeapons()
+    end
+
     hook.Run("CWRP_PlayerConfiscated", ply, target, confiscatedWeapons)
 end
