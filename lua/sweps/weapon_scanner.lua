@@ -185,6 +185,9 @@ function SWEP:PrimaryAttack()
     local weapons = target:GetWeapons()
     local currentSlot = 0
     
+    -- Forward declare DisplayScanResults for use in ScanSlot
+    local DisplayScanResults
+    
     local function ScanSlot(index)
         if not IsValid(ply) or not IsValid(target) then return end
         
@@ -249,7 +252,7 @@ function SWEP:PrimaryAttack()
         end
     end
     
-    function DisplayScanResults()
+    DisplayScanResults = function()
         -- Display scan results with custom messages
         local scanStartMsg = WEAPON_SCANNER_MESSAGES and WEAPON_SCANNER_MESSAGES.scanStart or "[SCANNING...]"
         local scanCompleteMsg = WEAPON_SCANNER_MESSAGES and WEAPON_SCANNER_MESSAGES.scanComplete or "[SCAN COMPLETE]"
