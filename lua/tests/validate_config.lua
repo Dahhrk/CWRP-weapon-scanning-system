@@ -15,8 +15,8 @@
     3. Check console output for validation results
     4. Fix any reported errors before deploying
     
-    Or run manually in Lua console:
-    > lua_run_cl include("lua/tests/validate_config.lua")
+    Or run manually in server console:
+    > lua_run include("lua/tests/validate_config.lua")
     
 ================================================================================
 ]]--

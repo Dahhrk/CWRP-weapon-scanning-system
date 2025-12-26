@@ -453,7 +453,7 @@ ITEM_JOB_EXCEPTIONS = {
 --   Default: 1.5 (adds 50% more time)
 --   Note: Applied to items marked as "red" danger level
 --   Example: 3 second base × 1.5 multiplier = 4.5 seconds for red items
---   Note: Both multipliers stack (large + dangerous = 2 × 1.5 = 3x time)
+--   Note: Both multipliers stack (large + dangerous = 2.0 × 1.5 = 3.0x time)
 -- 
 -- concealKey: Keyboard key players hold to conceal items
 --   Valid values: Any KEY_ constant (KEY_E, KEY_R, KEY_F, etc.)

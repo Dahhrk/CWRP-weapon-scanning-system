@@ -25,7 +25,7 @@ A comprehensive validation script that checks your `weapon_scanner_config.lua` f
 2. Open the server console
 3. Run the command:
    ```
-   lua_run_cl include("lua/tests/validate_config.lua")
+   lua_run include("lua/tests/validate_config.lua")
    ```
 4. Review the output for any errors or warnings
 
