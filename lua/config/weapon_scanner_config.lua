@@ -446,13 +446,13 @@ ITEM_JOB_EXCEPTIONS = {
 --   Valid values: Any positive number (recommended: 1.5-3)
 --   Default: 2 (doubles concealment time)
 --   Note: Applied to items like rifles, heavy weapons
---   Example: 3 second base × 2 multiplier = 6 seconds for large items
+--   Example: 3-second base × 2 multiplier = 6 seconds for large items
 -- 
 -- dangerItemMultiplier: Time multiplier for high-danger items
 --   Valid values: Any positive number (recommended: 1.2-2)
 --   Default: 1.5 (adds 50% more time)
 --   Note: Applied to items marked as "red" danger level
---   Example: 3 second base × 1.5 multiplier = 4.5 seconds for red items
+--   Example: 3-second base × 1.5 multiplier = 4.5 seconds for red items
 --   Note: Both multipliers stack (large + dangerous = 2.0 × 1.5 = 3.0x time)
 -- 
 -- concealKey: Keyboard key players hold to conceal items
