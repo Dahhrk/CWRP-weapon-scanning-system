@@ -635,9 +635,13 @@ WEAPON_SCANNER_SYSTEMATIC = {
 -- 
 -- ALERT MESSAGES (Sent to nearby guards):
 -- dangerAlert: Format for high-danger item alerts
---   %s placeholders: First = item name, Second = player name
+--   %s placeholders: First = scanner name, Second = item name, Third = target player name
 -- restrictedAlert: Format for restricted item alerts
---   %s placeholders: First = item name, Second = player name
+--   %s placeholders: First = scanner name, Second = item name, Third = target player name
+-- infoClean: Message sent to scanned player when no illegal items found
+--   %s placeholder: Scanner name
+-- infoItems: Message sent to scanned player when items are found
+--   %s placeholder: Scanner name, %d = number of items
 -- 
 -- SOUND EFFECTS:
 -- scanSound: Sound file played when scan completes
@@ -680,8 +684,10 @@ WEAPON_SCANNER_SYSTEMATIC = {
 --   dangerLevelRed = "Contraband:"
 -- 
 -- Custom alert messages:
---   dangerAlert = "🚨 ALERT: %s detected on %s - RESPOND IMMEDIATELY"
---   restrictedAlert = "⚠ WARNING: %s found on %s - investigate"
+--   dangerAlert = "🚨 ALERT: %s detected %s on %s - RESPOND IMMEDIATELY"
+--   restrictedAlert = "⚠ WARNING: %s found %s on %s - investigate"
+--   infoClean = "✓ %s scanned you - All clear"
+--   infoItems = "ℹ %s scanned you - %d items detected"
 WEAPON_SCANNER_MESSAGES = {
     -- Scan flow messages
     scanStart = "[SCANNING...]",
@@ -700,9 +706,12 @@ WEAPON_SCANNER_MESSAGES = {
     stealthBypass = "Scan bypassed - Stealth technology detected.",
     jobBypass = "This role cannot be scanned.",
     
-    -- Alert messages for guards (use %s for item and player name placeholders)
-    dangerAlert = "[ALERT] High-danger item detected: %s in %s's inventory!",
-    restrictedAlert = "[ALERT] Restricted item detected: %s on %s",
+    -- Alert messages for guards (use %s for scanner name, item, and player name placeholders)
+    -- Format: scanner name, item name, target player name
+    dangerAlert = "[ALERT] %s detected a high-danger item (%s) in %s's inventory!",
+    restrictedAlert = "[ALERT] %s flagged a restricted item (%s) in %s's inventory!",
+    infoClean = "[INFO] %s scanned your inventory and found no illegal items.",
+    infoItems = "[INFO] %s scanned your inventory and found %d items.",
     
     -- Sound effects
     scanSound = "buttons/button14.wav",
