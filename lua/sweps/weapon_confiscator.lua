@@ -80,5 +80,10 @@ function SWEP:PrimaryAttack()
         CWRP_SaveConfiscatedWeapons()
     end
 
+    -- Enhanced admin logging
+    if CWRP_LogConfiscation then
+        CWRP_LogConfiscation(ply, target, confiscatedWeapons)
+    end
+
     hook.Run("CWRP_PlayerConfiscated", ply, target, confiscatedWeapons)
 end
