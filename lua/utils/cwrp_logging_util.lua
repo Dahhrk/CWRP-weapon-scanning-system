@@ -58,7 +58,7 @@ function CWRP_LogScanResult(scanner, target, scanData)
     end
     
     local description = string.format(
-        "Guard %s scanned %s (Team: %s)",
+        "%s scanned %s (Team: %s)",
         scanner:Nick(), target:Nick(), team.GetName(target:Team())
     )
     
@@ -77,7 +77,7 @@ function CWRP_LogConfiscation(confiscator, target, confiscatedWeapons)
     }
     
     local description = string.format(
-        "Guard %s confiscated %d items from %s",
+        "%s confiscated %d items from %s",
         confiscator:Nick(), #confiscatedWeapons, target:Nick()
     )
     

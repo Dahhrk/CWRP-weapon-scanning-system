@@ -299,15 +299,50 @@ function SWEP:PrimaryAttack()
                     
                     if shouldAlert then
                         -- Pre-format alert message for efficiency
-                        local alertMsg = WEAPON_SCANNER_MESSAGES and WEAPON_SCANNER_MESSAGES.dangerAlert or "[ALERT] High-danger item detected: %s in %s's inventory!"
+                        local alertMsg = WEAPON_SCANNER_MESSAGES and WEAPON_SCANNER_MESSAGES.dangerAlert or "[ALERT] %s detected a high-danger item (%s) in %s's inventory!"
                         
                         -- Send detailed alert for each red item
                         for _, redItem in ipairs(redItems) do
-                            nearbyPly:ChatPrint(string.format(alertMsg, redItem, target:Nick()))
+                            nearbyPly:ChatPrint(string.format(alertMsg, ply:Nick(), redItem, target:Nick()))
                         end
                         
                         if WEAPON_SCANNER_CONTRABAND_ALERTS and WEAPON_SCANNER_CONTRABAND_ALERTS.playSound and WEAPON_SCANNER_CONTRABAND_ALERTS.soundEffect then
                             nearbyPly:EmitSound(WEAPON_SCANNER_CONTRABAND_ALERTS.soundEffect)
+                        end
+                    end
+                end
+            end
+        end
+        
+        -- Alert nearby guards for yellow items (restricted items)
+        if #yellowItems > 0 then
+            local alertRadius = (WEAPON_SCANNER_CONTRABAND_ALERTS and WEAPON_SCANNER_CONTRABAND_ALERTS.alertRadius) or 500
+            local alertTeams = (WEAPON_SCANNER_CONTRABAND_ALERTS and WEAPON_SCANNER_CONTRABAND_ALERTS.alertTeams) or {}
+            
+            for _, nearbyPly in ipairs(player.GetAll()) do
+                if nearbyPly ~= ply and IsValid(nearbyPly) then
+                    local distance = ply:GetPos():Distance(nearbyPly:GetPos())
+                    
+                    -- Check if player is in alert radius and on an alert team
+                    local shouldAlert = distance <= alertRadius
+                    if shouldAlert and #alertTeams > 0 then
+                        shouldAlert = false
+                        local nearbyTeam = nearbyPly:Team()
+                        for _, alertTeam in ipairs(alertTeams) do
+                            if nearbyTeam == alertTeam then
+                                shouldAlert = true
+                                break
+                            end
+                        end
+                    end
+                    
+                    if shouldAlert then
+                        -- Pre-format restricted alert message
+                        local restrictedMsg = WEAPON_SCANNER_MESSAGES and WEAPON_SCANNER_MESSAGES.restrictedAlert or "[ALERT] %s flagged a restricted item (%s) in %s's inventory!"
+                        
+                        -- Send detailed alert for each yellow item
+                        for _, yellowItem in ipairs(yellowItems) do
+                            nearbyPly:ChatPrint(string.format(restrictedMsg, ply:Nick(), yellowItem, target:Nick()))
                         end
                     end
                 end
@@ -372,12 +407,25 @@ function SWEP:PrimaryAttack()
         }
         
         local logMsg = string.format(
-            "[SCAN] Guard %s scanned %s (Team: %s) - Red: %d, Yellow: %d, Green: %d, Allowed: %d",
+            "[SCAN] %s scanned %s (Team: %s) - Red: %d, Yellow: %d, Green: %d, Allowed: %d",
             ply:Nick(), target:Nick(), team.GetName(targetTeam),
             #redItems, #yellowItems, #greenItems, #allowedItems
         )
         
         CWRP_LogAction("WEAPON SCAN", logMsg, logDetails)
+
+        -- Notify the scanned player
+        -- Note: scanResults contains all non-concealed items detected during scan
+        -- This gives the player accurate feedback about what the scanner saw
+        if IsValid(target) then
+            if #scanResults == 0 then
+                local infoClean = WEAPON_SCANNER_MESSAGES and WEAPON_SCANNER_MESSAGES.infoClean or "[INFO] %s scanned your inventory and found no illegal items."
+                target:ChatPrint(string.format(infoClean, ply:Nick()))
+            else
+                local infoItems = WEAPON_SCANNER_MESSAGES and WEAPON_SCANNER_MESSAGES.infoItems or "[INFO] %s scanned your inventory and found %d items."
+                target:ChatPrint(string.format(infoItems, ply:Nick(), #scanResults))
+            end
+        end
 
         hook.Run("CWRP_PlayerScanned", ply, target, {
             detectedWeapons = scanResults,
