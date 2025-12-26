@@ -143,7 +143,7 @@ if WEAPON_SCANNER_MESSAGES then
     local requiredMessages = {
         "scanStart", "scanComplete", "noWeapons",
         "allowedHeader", "dangerLevelRed", "dangerLevelYellow", "dangerLevelGreen",
-        "jobBypass", "dangerAlert"
+        "jobBypass", "dangerAlert", "restrictedAlert", "infoClean", "infoItems"
     }
     for _, msgKey in ipairs(requiredMessages) do
         if not WEAPON_SCANNER_MESSAGES[msgKey] then
